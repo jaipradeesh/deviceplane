@@ -82,52 +82,78 @@ func (r *Reporter) Stop() {
 }
 
 func (r *Reporter) applicationStatusReporter() {
-	ticker := time.NewTicker(defaultTickerFrequency)
-	defer ticker.Stop()
+	deltaTicker := time.NewTicker(defaultTickerFrequency)
+	defer deltaTicker.Stop()
 
-	for {
+	fullDataTicker := time.NewTicker(fullDataTickerFrequency)
+	defer fullDataTicker.Stop()
+
+	deltaReport := func() {
 		r.lock.RLock()
 		releaseToReport := r.desiredApplicationRelease
 		if releaseToReport == r.reportedApplicationRelease {
 			r.lock.RUnlock()
-			goto cont
+			return
 		}
 		for serviceName := range r.desiredApplicationServiceNames {
 			status, ok := r.serviceStatuses[serviceName]
 			if !ok || status.CurrentReleaseID != releaseToReport {
 				r.lock.RUnlock()
-				goto cont
+				return
 			}
 		}
 		r.lock.RUnlock()
 
 		if err := r.reportApplicationStatus(r.ctx, r.applicationID, releaseToReport); err != nil {
-			log.WithError(err).Error("report application status")
-			goto cont
+			log.WithError(err).Error("report delta application status")
+			return
 		}
 
+		r.lock.RLock()
 		r.reportedApplicationRelease = releaseToReport
+		r.lock.RUnlock()
+	}
 
-	cont:
+	fullReport := func() {
+		r.lock.RLock()
+		lastReportedRelease := r.reportedApplicationRelease
+		r.lock.RUnlock()
+
+		if err := r.reportApplicationStatus(r.ctx, r.applicationID, lastReportedRelease); err != nil {
+			log.WithError(err).Error("report full application status")
+			return
+		}
+	}
+
+	for {
 		select {
 		case <-r.ctx.Done():
 			r.applicationStatusReporterDone <- struct{}{}
 			return
-		case <-ticker.C:
-			continue
+		case <-deltaTicker.C:
+			deltaReport()
+		case <-fullDataTicker.C:
+			fullReport()
 		}
 	}
 }
 
 func (r *Reporter) serviceStatusReporter() {
-	ticker := time.NewTicker(defaultTickerFrequency)
-	defer ticker.Stop()
+	deltaTicker := time.NewTicker(defaultTickerFrequency)
+	defer deltaTicker.Stop()
 
-	for {
+	fullDataTicker := time.NewTicker(fullDataTickerFrequency)
+	defer fullDataTicker.Stop()
+
+	deltaReport := func() {
 		r.lock.RLock()
 		diff := make(map[string]*models.SetDeviceServiceStatusRequest)
 		copy := make(map[string]*models.SetDeviceServiceStatusRequest)
 		for service, status := range r.serviceStatuses {
+			if status == nil {
+				continue
+			}
+
 			reportedStatus, ok := r.reportedServiceStatuses[service]
 			if !ok || (reportedStatus.CurrentReleaseID != status.CurrentReleaseID ||
 				reportedStatus.ContainerStatus != status.ContainerStatus) {
@@ -140,20 +166,44 @@ func (r *Reporter) serviceStatusReporter() {
 
 		for serviceName, status := range diff {
 			if err := r.reportServiceStatus(r.ctx, r.applicationID, serviceName, status.CurrentReleaseID, status.ContainerStatus); err != nil {
-				log.WithError(err).Error("report service status")
-				goto cont
+				log.WithError(err).Error("report delta service status")
+				return
 			}
 		}
 
+		r.lock.RLock()
 		r.reportedServiceStatuses = copy
+		r.lock.RUnlock()
+	}
 
-	cont:
+	fullReport := func() {
+		r.lock.RLock()
+		copy := make(map[string]*models.SetDeviceServiceStatusRequest)
+		for service, status := range r.reportedServiceStatuses {
+			if status == nil {
+				continue
+			}
+			copy[service] = status
+		}
+		r.lock.RUnlock()
+
+		for serviceName, status := range copy {
+			if err := r.reportServiceStatus(r.ctx, r.applicationID, serviceName, status.CurrentReleaseID, status.ContainerStatus); err != nil {
+				log.WithError(err).Error("report full service status")
+				return
+			}
+		}
+	}
+
+	for {
 		select {
 		case <-r.ctx.Done():
 			r.serviceStatusReporterDone <- struct{}{}
 			return
-		case <-ticker.C:
-			continue
+		case <-deltaTicker.C:
+			deltaReport()
+		case <-fullDataTicker.C:
+			fullReport()
 		}
 	}
 }

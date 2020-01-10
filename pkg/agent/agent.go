@@ -16,7 +16,6 @@ import (
 	"github.com/deviceplane/deviceplane/pkg/agent/server/local"
 	"github.com/deviceplane/deviceplane/pkg/agent/server/remote"
 	"github.com/deviceplane/deviceplane/pkg/agent/service"
-	"github.com/deviceplane/deviceplane/pkg/agent/status"
 	"github.com/deviceplane/deviceplane/pkg/agent/supervisor"
 	"github.com/deviceplane/deviceplane/pkg/agent/updater"
 	"github.com/deviceplane/deviceplane/pkg/agent/validator"
@@ -49,7 +48,7 @@ type Agent struct {
 	stateDir               string
 	serverPort             int
 	supervisor             *supervisor.Supervisor
-	statusGarbageCollector *status.GarbageCollector
+	statusGarbageCollector *supervisor.GarbageCollector
 	infoReporter           *info.Reporter
 	localServer            *local.Server
 	remoteServer           *remote.Server
@@ -104,7 +103,7 @@ func NewAgent(
 		stateDir:               stateDir,
 		serverPort:             serverPort,
 		supervisor:             supervisor,
-		statusGarbageCollector: status.NewGarbageCollector(client.DeleteDeviceApplicationStatus, client.DeleteDeviceServiceStatus),
+		statusGarbageCollector: supervisor.NewGarbageCollector(client.DeleteDeviceApplicationStatus, client.DeleteDeviceServiceStatus),
 		infoReporter:           info.NewReporter(client, version),
 		localServer:            local.NewServer(service),
 		remoteServer:           remote.NewServer(client, service),

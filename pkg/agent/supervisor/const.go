@@ -5,5 +5,6 @@ import (
 )
 
 const (
-	defaultTickerFrequency = 3 * time.Second
+	defaultTickerFrequency  = 3 * time.Second
+	fullDataTickerFrequency = 60 * time.Second
 )

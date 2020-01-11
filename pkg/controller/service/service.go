@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -2900,7 +2901,19 @@ func (s *Service) setDeviceServiceStatus(w http.ResponseWriter, r *http.Request,
 	service := vars["service"]
 
 	var setDeviceServiceStatusRequest models.SetDeviceServiceStatusRequest
+
+	defer r.Body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	bodyString := string(bodyBytes)
+	log.Info(bodyString)
+
 	if err := read(r, &setDeviceServiceStatusRequest); err != nil {
+
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

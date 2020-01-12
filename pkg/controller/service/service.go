@@ -66,8 +66,8 @@ type Service struct {
 	deviceServiceStatuses      store.DeviceServiceStatuses
 	metricConfigs              store.MetricConfigs
 	email                      email.Interface
-	emailFromAddress           string
 	emailFromName              string
+	emailFromAddress           string
 	st                         *statsd.Client
 	connman                    *connman.ConnectionManager
 

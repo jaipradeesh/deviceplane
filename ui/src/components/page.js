@@ -26,7 +26,8 @@ const GlobalStyle = createGlobalStyle`
   }
 
   html, body {
-    text-rendering: optimizeLegibility
+    text-rendering: optimizelegibility;
+    shape-rendering: geometricprecision;
     -webkit-font-smoothing: antialiased;
   }
 

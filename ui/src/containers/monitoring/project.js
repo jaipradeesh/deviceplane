@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigation } from 'react-navi';
-import { toaster, Icon, Tooltip } from 'evergreen-ui';
+import { toaster, Tooltip } from 'evergreen-ui';
 
 import api from '../../api';
-import theme, { labelColors } from '../../theme';
+import { labelColors } from '../../theme';
 import { buildLabelColorMap } from '../../helpers/labels';
 import Card from '../../components/card';
 import Table from '../../components/table';
@@ -18,6 +18,7 @@ import {
   Checkbox,
   Select,
   Button,
+  Icon,
 } from '../../components/core';
 
 const supportedMetrics = [
@@ -198,7 +199,7 @@ const Project = ({
         Header: (
           <Row alignItems="center">
             <Tooltip content="When enabled, a Datadog tag with the device name is included.">
-              <Icon icon="info-sign" size={10} color={theme.colors.primary} />
+              <Icon icon="info-sign" size={14} color="primary" />
             </Tooltip>
             <Text marginLeft={1}>Device</Text>
           </Row>
@@ -244,20 +245,12 @@ const Project = ({
           editRow && editRow.name === original.name ? (
             <Row>
               <Button
-                title={
-                  <Icon
-                    icon="floppy-disk"
-                    size={16}
-                    color={theme.colors.primary}
-                  />
-                }
+                title={<Icon icon="floppy-disk" size={16} color="primary" />}
                 variant="icon"
                 onClick={saveEdit}
               />
               <Button
-                title={
-                  <Icon icon="cross" size={16} color={theme.colors.white} />
-                }
+                title={<Icon icon="cross" size={16} color="white" />}
                 variant="icon"
                 onClick={() => setEditRow(null)}
                 marginLeft={3}
@@ -266,9 +259,7 @@ const Project = ({
           ) : (
             <Row>
               <Button
-                title={
-                  <Icon icon="edit" size={16} color={theme.colors.primary} />
-                }
+                title={<Icon icon="edit" size={16} color="primary" />}
                 variant="icon"
                 onClick={() => setEditRow(original)}
               />

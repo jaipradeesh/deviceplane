@@ -2,11 +2,9 @@ import React, { forwardRef, useState } from 'react';
 import { RHFInput } from 'react-hook-form-input';
 import styled from 'styled-components';
 import { space, color, typography } from 'styled-system';
-import { Icon } from 'evergreen-ui';
 
-import theme from '../theme';
 import utils from '../utils';
-import { Group, Row, Column, Input, Textarea, Label, Text } from './core';
+import { Group, Row, Column, Input, Textarea, Label, Text, Icon } from './core';
 
 const Container = styled(Group)`
   margin-bottom: ${props =>
@@ -115,6 +113,7 @@ const Field = forwardRef(
                   <Icon
                     icon={type === 'password' ? 'eye-open' : 'eye-off'}
                     size={16}
+                    color="primary"
                   />
                   <Text
                     fontSize={1}
@@ -122,6 +121,7 @@ const Field = forwardRef(
                     fontWeight={2}
                     width="45px"
                     textAlign="right"
+                    color="primary"
                   >
                     {type === 'password' ? 'SHOW' : 'HIDE'}
                   </Text>
@@ -146,8 +146,8 @@ const Field = forwardRef(
           <Row marginTop={2} alignItems="flex-start">
             <Icon
               icon="error"
-              color={theme.colors.red}
-              size={14}
+              color="red"
+              size={16}
               flexShrink={0}
               marginTop={2}
             />

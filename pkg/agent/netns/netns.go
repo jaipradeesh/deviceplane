@@ -40,14 +40,18 @@ func (m *Manager) RunInContainerNamespace(ctx context.Context, containerID strin
 	}
 	defer originalNamespace.Close()
 	defer func() {
-		fmt.Println("ORIGINAL NAMEPACE----", originalNamespace)
 		err := netns.Set(originalNamespace)
-		fmt.Println("switching to original namespace:::", err)
+		if err == nil {
+			return
+		}
+
+		fmt.Println("ORIGINAL NAMEPACE----", originalNamespace)
+		fmt.Println("err switching to original namespace:::", err)
 		fmt.Println("original namespace")
 		fmt.Println(originalNamespace.String())
 
 		err = netns.Set(originalNamespace)
-		if err != nil {
+		if err == nil {
 			fmt.Println("succeeded on second attempt at switching!")
 			fmt.Println("original namespace")
 			fmt.Println(originalNamespace.String())

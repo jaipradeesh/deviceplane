@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/apex/log"
-	"github.com/pkg/errors"
 	"github.com/vishvananda/netns"
 
 	"github.com/deviceplane/deviceplane/pkg/engine"
@@ -44,18 +42,21 @@ func (m *Manager) RunInContainerNamespace(ctx context.Context, containerID strin
 	defer func() {
 		fmt.Println("ORIGINAL NAMEPACE----", originalNamespace)
 		err := netns.Set(originalNamespace)
-		log.WithField("original namespace", originalNamespace.String()).
-			WithError(errors.Wrap(err, "switching to original namespace"))
+		fmt.Println("switching to original namespace:::", err)
+		fmt.Println("original namespace")
+		fmt.Println(originalNamespace.String())
 
 		err = netns.Set(originalNamespace)
 		if err != nil {
-			log.WithField("original namespace", originalNamespace.String()).
-				Debug("succeeded on second attempt at switching!")
+			fmt.Println("succeeded on second attempt at switching!")
+			fmt.Println("original namespace")
+			fmt.Println(originalNamespace.String())
 			return
 		}
 
-		log.WithField("original namespace", originalNamespace.String()).
-			WithError(errors.Wrap(err, "second attempt at switching to original namespace"))
+		fmt.Println("second attempt at switching to original namespace:::", err)
+		fmt.Println("original namespace")
+		fmt.Println(originalNamespace.String())
 		failedToSwitchNamespace = true
 	}()
 

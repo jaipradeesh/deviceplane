@@ -2,6 +2,7 @@ package netns
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 
 	"github.com/apex/log"
@@ -41,18 +42,19 @@ func (m *Manager) RunInContainerNamespace(ctx context.Context, containerID strin
 	}
 	defer originalNamespace.Close()
 	defer func() {
+		fmt.Println("ORIGINAL NAMEPACE----", originalNamespace)
 		err := netns.Set(originalNamespace)
-		log.WithField("original namespace", originalNamespace).
+		log.WithField("original namespace", originalNamespace.String()).
 			WithError(errors.Wrap(err, "switching to original namespace"))
 
 		err = netns.Set(originalNamespace)
 		if err != nil {
-			log.WithField("original namespace", originalNamespace).
+			log.WithField("original namespace", originalNamespace.String()).
 				Debug("succeeded on second attempt at switching!")
 			return
 		}
 
-		log.WithField("original namespace", originalNamespace).
+		log.WithField("original namespace", originalNamespace.String()).
 			WithError(errors.Wrap(err, "second attempt at switching to original namespace"))
 		failedToSwitchNamespace = true
 	}()

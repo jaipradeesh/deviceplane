@@ -27,12 +27,6 @@ func (m *Manager) RunInContainerNamespace(ctx context.Context, containerID strin
 	}
 
 	runtime.LockOSThread()
-	failedToSwitchNamespace := false
-	defer func() {
-		if !failedToSwitchNamespace {
-			runtime.UnlockOSThread()
-		}
-	}()
 
 	originalNamespace, err := netns.Get()
 	if err != nil {
@@ -61,7 +55,6 @@ func (m *Manager) RunInContainerNamespace(ctx context.Context, containerID strin
 		fmt.Println("second attempt at switching to original namespace:::", err)
 		fmt.Println("original namespace")
 		fmt.Println(originalNamespace.String())
-		failedToSwitchNamespace = true
 	}()
 
 	containerNamespace, err := netns.GetFromPid(inspectResponse.PID)

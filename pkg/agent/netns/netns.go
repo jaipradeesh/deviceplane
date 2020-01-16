@@ -4,6 +4,8 @@ import (
 	"context"
 	"runtime"
 
+	"github.com/apex/log"
+	"github.com/pkg/errors"
 	"github.com/vishvananda/netns"
 
 	"github.com/deviceplane/deviceplane/pkg/engine"
@@ -26,14 +28,34 @@ func (m *Manager) RunInContainerNamespace(ctx context.Context, containerID strin
 	}
 
 	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
+	failedToSwitchNamespace := false
+	defer func() {
+		if !failedToSwitchNamespace {
+			runtime.UnlockOSThread()
+		}
+	}()
 
 	originalNamespace, err := netns.Get()
 	if err != nil {
 		return err
 	}
 	defer originalNamespace.Close()
-	defer netns.Set(originalNamespace)
+	defer func() {
+		err := netns.Set(originalNamespace)
+		log.WithField("original namespace", originalNamespace).
+			WithError(errors.Wrap(err, "switching to original namespace"))
+
+		err = netns.Set(originalNamespace)
+		if err != nil {
+			log.WithField("original namespace", originalNamespace).
+				Debug("succeeded on second attempt at switching!")
+			return
+		}
+
+		log.WithField("original namespace", originalNamespace).
+			WithError(errors.Wrap(err, "second attempt at switching to original namespace"))
+		failedToSwitchNamespace = true
+	}()
 
 	containerNamespace, err := netns.GetFromPid(inspectResponse.PID)
 	if err != nil {

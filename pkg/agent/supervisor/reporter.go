@@ -12,15 +12,15 @@ import (
 type Reporter struct {
 	applicationID           string
 	reportApplicationStatus func(ctx context.Context, applicationID string, currentRelease string) error
-	reportServiceStatus     func(ctx context.Context, applicationID, service string, currentReleaseID string, state models.ServiceState, containerError string) error
+	reportServiceStatus     func(ctx context.Context, applicationID, service string, currentRelease string, state models.ServiceState, containerError string) error
 
 	desiredApplicationRelease      string
 	desiredApplicationServiceNames map[string]struct{}
 	reportedApplicationRelease     string
 	applicationStatusReporterDone  chan struct{}
 
-	serviceStatuses           map[string]*models.SetDeviceServiceStatusRequest
-	reportedServiceStatuses   map[string]*models.SetDeviceServiceStatusRequest
+	serviceStatuses           map[string]models.SetDeviceServiceStatusRequest
+	reportedServiceStatuses   map[string]models.SetDeviceServiceStatusRequest
 	serviceStatusReporterDone chan struct{}
 
 	once   sync.Once
@@ -32,7 +32,7 @@ type Reporter struct {
 func NewReporter(
 	applicationID string,
 	reportApplicationStatus func(ctx context.Context, applicationID, currentRelease string) error,
-	reportServiceStatus func(ctx context.Context, applicationID, service string, currentReleaseID string, state models.ServiceState, containerError string) error,
+	reportServiceStatus func(ctx context.Context, applicationID, service string, currentRelease string, state models.ServiceState, containerError string) error,
 ) *Reporter {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Reporter{
@@ -42,8 +42,8 @@ func NewReporter(
 
 		desiredApplicationServiceNames: make(map[string]struct{}),
 		applicationStatusReporterDone:  make(chan struct{}),
-		serviceStatuses:                make(map[string]*models.SetDeviceServiceStatusRequest),
-		reportedServiceStatuses:        make(map[string]*models.SetDeviceServiceStatusRequest),
+		serviceStatuses:                make(map[string]models.SetDeviceServiceStatusRequest),
+		reportedServiceStatuses:        make(map[string]models.SetDeviceServiceStatusRequest),
 		serviceStatusReporterDone:      make(chan struct{}),
 
 		ctx:    ctx,
@@ -68,7 +68,7 @@ func (r *Reporter) SetDesiredApplication(release string, applicationConfig map[s
 	})
 }
 
-func (r *Reporter) SetServiceStatus(serviceName string, status *models.SetDeviceServiceStatusRequest) {
+func (r *Reporter) SetServiceStatus(serviceName string, status models.SetDeviceServiceStatusRequest) {
 	r.lock.Lock()
 	r.serviceStatuses[serviceName] = status
 	r.lock.Unlock()
@@ -125,8 +125,8 @@ func (r *Reporter) serviceStatusReporter() {
 
 	for {
 		r.lock.RLock()
-		diff := make(map[string]*models.SetDeviceServiceStatusRequest)
-		copy := make(map[string]*models.SetDeviceServiceStatusRequest)
+		diff := make(map[string]models.SetDeviceServiceStatusRequest)
+		copy := make(map[string]models.SetDeviceServiceStatusRequest)
 		for service, status := range r.serviceStatuses {
 			reportedStatus, ok := r.reportedServiceStatuses[service]
 			if !ok ||

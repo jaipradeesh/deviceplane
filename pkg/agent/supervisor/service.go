@@ -145,12 +145,12 @@ func (s *ServiceSupervisor) reconcileLoop() {
 
 			startCanceler()
 
-			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+			s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceImagePulling,
 			})
 			if err = s.imagePuller.Pull(ctx, service.Image); err != nil {
-				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+				s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceImagePulling,
 					ErrorMessage:     errors.WithMessage(err, "pulling image").Error(),
@@ -160,12 +160,12 @@ func (s *ServiceSupervisor) reconcileLoop() {
 
 			s.sendKeepAliveDeactivate()
 
-			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+			s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceRemovingPreviousContainer,
 			})
 			if err = containerStop(ctx, s.engine, instance.ID); err != nil {
-				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+				s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceRemovingPreviousContainer,
 					ErrorMessage:     errors.WithMessage(err, "stopping previous container").Error(),
@@ -173,7 +173,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 				goto cont
 			}
 			if err = containerRemove(ctx, s.engine, instance.ID); err != nil {
-				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+				s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceRemovingPreviousContainer,
 					ErrorMessage:     errors.WithMessage(err, "removing previous container").Error(),
@@ -182,12 +182,12 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			}
 		} else {
 			startCanceler()
-			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+			s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceImagePulling,
 			})
 			if err = s.imagePuller.Pull(ctx, service.Image); err != nil {
-				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+				s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceImagePulling,
 					ErrorMessage:     errors.WithMessage(err, "pulling image").Error(),
@@ -209,7 +209,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			}
 		}
 
-		s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+		s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 			CurrentReleaseID: release,
 			CurrentState:     models.ServiceContainerCreating,
 		})
@@ -219,7 +219,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			strings.Join([]string{s.serviceName, hash.ShortHash(s.applicationID), spec.ShortHash(service, s.serviceName)}, "-"),
 			spec.WithStandardLabels(service, s.applicationID, s.serviceName),
 		); err != nil {
-			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+			s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceContainerCreating,
 				ErrorMessage:     errors.WithMessage(err, "creating container").Error(),
@@ -314,14 +314,14 @@ func (s *ServiceSupervisor) keepAlive() {
 
 			if instance.State != models.ServiceContainerRunning {
 				inspectResponse, err := s.engine.InspectContainer(s.ctx, instance.ID)
-				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+				s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     instance.State,
 					ErrorMessage: func() string {
 						if err != nil {
 							return "unknown error, cannot inspect container"
 						}
-						if inspectResponse.ExitCode != nil && (*inspectResponse.ExitCode) == 1 {
+						if inspectResponse.ExitCode != nil {
 							message := fmt.Sprintf(
 								"container exited with exit code %d",
 								*inspectResponse.ExitCode,
@@ -342,7 +342,7 @@ func (s *ServiceSupervisor) keepAlive() {
 				continue
 			}
 
-			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
+			s.reporter.SetServiceStatus(s.serviceName, models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     instance.State,
 			})

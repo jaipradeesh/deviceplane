@@ -2910,7 +2910,7 @@ func (s *Service) setDeviceServiceStatus(w http.ResponseWriter, r *http.Request,
 		service,
 		setDeviceServiceStatusRequest.CurrentReleaseID,
 		setDeviceServiceStatusRequest.CurrentState,
-		setDeviceServiceStatusRequest.ContainerError,
+		setDeviceServiceStatusRequest.ErrorMessage,
 	); err != nil {
 		log.WithError(err).Error("set device service status")
 		w.WriteHeader(http.StatusInternalServerError)

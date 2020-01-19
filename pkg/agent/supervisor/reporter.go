@@ -132,7 +132,7 @@ func (r *Reporter) serviceStatusReporter() {
 			if !ok ||
 				(reportedStatus.CurrentReleaseID != status.CurrentReleaseID ||
 					reportedStatus.CurrentState != status.CurrentState ||
-					reportedStatus.ContainerError != status.ContainerError) {
+					reportedStatus.ErrorMessage != status.ErrorMessage) {
 				diff[service] = status
 			}
 			copy[service] = status
@@ -146,7 +146,7 @@ func (r *Reporter) serviceStatusReporter() {
 				serviceName,
 				status.CurrentReleaseID,
 				status.CurrentState,
-				status.ContainerError,
+				status.ErrorMessage,
 			); err != nil {
 				log.WithError(err).Error("report service status")
 				goto cont

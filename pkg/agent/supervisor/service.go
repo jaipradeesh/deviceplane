@@ -13,7 +13,6 @@ import (
 
 	"github.com/apex/log"
 
-	"github.com/deviceplane/deviceplane/pkg/agent/utils"
 	"github.com/deviceplane/deviceplane/pkg/agent/validator"
 	"github.com/deviceplane/deviceplane/pkg/agent/variables"
 	"github.com/deviceplane/deviceplane/pkg/engine"
@@ -126,7 +125,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			}()
 		}
 
-		instances, err := utils.ContainerList(ctx, s.engine, nil, map[string]string{
+		instances, err := containerList(ctx, s.engine, nil, map[string]string{
 			models.ApplicationLabel: s.applicationID,
 			models.ServiceLabel:     s.serviceName,
 		}, true)
@@ -145,7 +144,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			}
 
 			startCanceler()
-			// pulling here
+
 			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceImagePulling,
@@ -154,7 +153,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceImagePulling,
-					ContainerError:   errors.WithMessage(err, "pulling image").Error(),
+					ErrorMessage:     errors.WithMessage(err, "pulling image").Error(),
 				})
 				goto cont
 			}
@@ -165,19 +164,19 @@ func (s *ServiceSupervisor) reconcileLoop() {
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceRemovingPreviousContainer,
 			})
-			if err = utils.ContainerStop(ctx, s.engine, instance.ID); err != nil {
+			if err = containerStop(ctx, s.engine, instance.ID); err != nil {
 				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceRemovingPreviousContainer,
-					ContainerError:   errors.WithMessage(err, "stopping previous container").Error(),
+					ErrorMessage:     errors.WithMessage(err, "stopping previous container").Error(),
 				})
 				goto cont
 			}
-			if err = utils.ContainerRemove(ctx, s.engine, instance.ID); err != nil {
+			if err = containerRemove(ctx, s.engine, instance.ID); err != nil {
 				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceRemovingPreviousContainer,
-					ContainerError:   errors.WithMessage(err, "removing previous container").Error(),
+					ErrorMessage:     errors.WithMessage(err, "removing previous container").Error(),
 				})
 				goto cont
 			}
@@ -187,13 +186,13 @@ func (s *ServiceSupervisor) reconcileLoop() {
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceImagePulling,
 			})
-			err := s.imagePuller.Pull(ctx, service.Image)
-			if err != nil {
+			if err = s.imagePuller.Pull(ctx, service.Image); err != nil {
 				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     models.ServiceImagePulling,
-					ContainerError:   errors.WithMessage(err, "pulling image").Error(),
+					ErrorMessage:     errors.WithMessage(err, "pulling image").Error(),
 				})
+				goto cont
 			}
 		}
 
@@ -214,7 +213,7 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			CurrentReleaseID: release,
 			CurrentState:     models.ServiceContainerCreating,
 		})
-		if _, err = utils.ContainerCreate(
+		if _, err = containerCreate(
 			ctx,
 			s.engine,
 			strings.Join([]string{s.serviceName, hash.ShortHash(s.applicationID), spec.ShortHash(service, s.serviceName)}, "-"),
@@ -223,14 +222,10 @@ func (s *ServiceSupervisor) reconcileLoop() {
 			s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 				CurrentReleaseID: release,
 				CurrentState:     models.ServiceContainerCreating,
-				ContainerError:   errors.WithMessage(err, "creating container").Error(),
+				ErrorMessage:     errors.WithMessage(err, "creating container").Error(),
 			})
 			goto cont
 		}
-		s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
-			CurrentReleaseID: release,
-			CurrentState:     models.ServiceContainerRunning,
-		})
 
 		s.sendKeepAliveService(service)
 		s.sendKeepAliveRelease(release)
@@ -300,7 +295,7 @@ func (s *ServiceSupervisor) keepAlive() {
 				continue
 			}
 
-			instances, err := utils.ContainerList(s.ctx, s.engine, nil, map[string]string{
+			instances, err := containerList(s.ctx, s.engine, nil, map[string]string{
 				models.ApplicationLabel: s.applicationID,
 				models.ServiceLabel:     s.serviceName,
 				models.HashLabel:        spec.Hash(service, s.serviceName),
@@ -314,36 +309,36 @@ func (s *ServiceSupervisor) keepAlive() {
 				continue
 			}
 
+			// TODO: filter down to just one instance if we find more
 			instance := instances[0]
-
-			// filter down to just one instance if we find more
-			for _, excessInstance := range instances[1:] {
-				go func(id string) {
-					utils.ContainerStop(s.ctx, s.engine, id)
-					utils.ContainerRemove(s.ctx, s.engine, id)
-				}(excessInstance.ID)
-			}
 
 			if instance.State != models.ServiceContainerRunning {
 				inspectResponse, err := s.engine.InspectContainer(s.ctx, instance.ID)
 				s.reporter.SetServiceStatus(s.serviceName, &models.SetDeviceServiceStatusRequest{
 					CurrentReleaseID: release,
 					CurrentState:     instance.State,
-					ContainerError: func() string {
+					ErrorMessage: func() string {
 						if err != nil {
 							return "unknown error, cannot inspect container"
 						}
 						if inspectResponse.ExitCode != nil && (*inspectResponse.ExitCode) == 1 {
+							message := fmt.Sprintf(
+								"container exited with exit code %d",
+								*inspectResponse.ExitCode,
+							)
 							if inspectResponse.Error == "" {
-								return "container exited with exit code 1"
+								return message
 							}
-							return fmt.Sprintf("container exited with exit code 1 (error: %s)", inspectResponse.Error)
+							return fmt.Sprintf("%s (error: %s)",
+								message,
+								inspectResponse.Error,
+							)
 						}
 						return ""
 					}(),
 				})
 
-				utils.ContainerStart(s.ctx, s.engine, instance.ID)
+				containerStart(s.ctx, s.engine, instance.ID)
 				continue
 			}
 

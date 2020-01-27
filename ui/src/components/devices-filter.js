@@ -336,7 +336,7 @@ export const DevicesFilter = props => {
           },
         ]}
       >
-        <Column flex={1} marginBottom={5} overflowY="auto" maxHeight="100%">
+        <Column flex={1} overflowY="auto" maxHeight="100%">
           {filter.map((condition, index) => (
             <Group key={index}>
               <Row justifyContent="space-between" alignItems="center">
@@ -414,6 +414,7 @@ export const DevicesFilter = props => {
         </Column>
 
         <Button
+          marginTop={3}
           title={props.filter ? 'Edit Filter' : 'Apply Filter'}
           onClick={() => {
             const validFilter = filter.filter(({ type, params }) => {

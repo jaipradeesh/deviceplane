@@ -1,5 +1,25 @@
 const breakpoints = ['600px', '800px', '1000px'];
 
+const space = [
+  0,
+  4,
+  8,
+  12,
+  16,
+  24,
+  32,
+  48,
+  64,
+  96,
+  128,
+  256,
+  384,
+  448,
+  512,
+  768,
+  1024,
+];
+
 const colors = {
   primary: '#6fccff',
 
@@ -38,25 +58,9 @@ const colors = {
 export default {
   colors,
 
-  space: [
-    0,
-    4,
-    8,
-    12,
-    16,
-    24,
-    32,
-    40,
-    48,
-    64,
-    128,
-    256,
-    384,
-    448,
-    512,
-    768,
-    1024,
-  ],
+  space,
+
+  sizes: space,
 
   fonts: {
     default: `Rubik,Roboto,sans-serif`,
@@ -69,13 +73,9 @@ export default {
 
   radii: [0, 4, 6, 8, 12, 16, 9999, '100%'],
 
-  sizes: [8, 12, 16, 24, 32, 40, 48, 64, 128, 256, 384, 448, 512, 768, 1024],
-
   breakpoints,
 
   borders: [`1px solid ${colors.primary}`, `3px solid ${colors.primary}`],
-
-  shadows: [`0 2px 4px black`, `0 3px 6px black`],
 
   mediaQueries: {
     small: `@media screen and (min-width: ${breakpoints[0]})`,

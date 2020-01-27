@@ -1,13 +1,10 @@
 import React from 'react';
 
-import theme from '../theme';
+import { labelColor } from '../helpers/labels';
 import { Row, Text } from './core';
 
-const DeviceLabel = ({
-  label: { key, value },
-  color = theme.colors.white,
-  onClick = () => {},
-}) => {
+const DeviceLabel = ({ label: { key, value }, onClick = () => {} }) => {
+  const color = labelColor(key);
   return (
     <Row
       overflow="hidden"
@@ -70,7 +67,7 @@ export const DeviceLabelMulti = ({ children, color }) => (
   </Row>
 );
 
-export const DeviceLabelKey = ({ label, color }) => (
+export const DeviceLabelKey = ({ label }) => (
   <Row
     marginY={2}
     marginRight={2}
@@ -87,7 +84,7 @@ export const DeviceLabelKey = ({ label, color }) => (
       fontSize={0}
       fontWeight={2}
     >
-      {label}
+      {labelColor(label)}
     </Text>
   </Row>
 );

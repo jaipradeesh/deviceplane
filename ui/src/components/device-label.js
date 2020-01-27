@@ -14,27 +14,26 @@ const DeviceLabel = ({ label: { key, value }, onClick = () => {} }) => {
         e.stopPropagation();
         onClick({ key, value });
       }}
+      border={0}
+      borderColor={color}
+      borderRadius={1}
     >
       <Text
-        backgroundColor={color}
         paddingX={2}
         paddingY={1}
-        color="black"
-        borderTopLeftRadius={1}
-        borderBottomLeftRadius={1}
+        color={color}
         whiteSpace="nowrap"
         overflow="hidden"
         fontSize={0}
         fontWeight={2}
+        borderRight={0}
+        borderColor={color}
       >
         {key}
       </Text>
       <Text
-        backgroundColor="grays.5"
         paddingX={2}
         paddingY={1}
-        borderTopRightRadius={1}
-        borderBottomRightRadius={1}
         overflow="hidden"
         whiteSpace="nowrap"
         fontSize={0}
@@ -49,14 +48,15 @@ const DeviceLabel = ({ label: { key, value }, onClick = () => {} }) => {
 export const DeviceLabelMulti = ({ children, color }) => (
   <Row
     overflow="hidden"
-    bg={color}
+    border={0}
+    borderColor={color}
     borderTopLeftRadius={1}
     borderBottomLeftRadius={1}
     paddingX={2}
     paddingY={1}
   >
     <Text
-      color="black"
+      color={color}
       whiteSpace="nowrap"
       overflow="hidden"
       fontSize={0}
@@ -67,26 +67,30 @@ export const DeviceLabelMulti = ({ children, color }) => (
   </Row>
 );
 
-export const DeviceLabelKey = ({ label }) => (
-  <Row
-    marginY={2}
-    marginRight={2}
-    overflow="hidden"
-    bg={color}
-    borderRadius={1}
-    paddingX={2}
-    paddingY={1}
-  >
-    <Text
-      color="black"
-      whiteSpace="nowrap"
+export const DeviceLabelKey = ({ label }) => {
+  const color = labelColor(label);
+  return (
+    <Row
+      marginY={2}
+      marginRight={2}
       overflow="hidden"
-      fontSize={0}
-      fontWeight={2}
+      border={0}
+      borderColor={color}
+      borderRadius={1}
+      paddingX={2}
+      paddingY={1}
     >
-      {labelColor(label)}
-    </Text>
-  </Row>
-);
+      <Text
+        color={color}
+        whiteSpace="nowrap"
+        overflow="hidden"
+        fontSize={0}
+        fontWeight={2}
+      >
+        {label}
+      </Text>
+    </Row>
+  );
+};
 
 export default DeviceLabel;

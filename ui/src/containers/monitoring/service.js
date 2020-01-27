@@ -304,9 +304,17 @@ const Service = ({
     [applications]
   );
 
+  let metricEndpointConfigs;
+  if (selection && selection.application) {
+    const app = applications.find(({ id }) => id === selection.application.id);
+    if (app) {
+      metricEndpointConfigs = app.metricEndpointConfigs;
+    }
+  }
+
   return (
     <>
-      <Row marginBottom={4} width={9}>
+      <Row marginBottom={4} width={11}>
         <Select
           variant="black"
           onChange={setSelection}
@@ -355,11 +363,7 @@ const Service = ({
             selection && selection.application && selection.application.id
           }
           service={selection && selection.service}
-          metricEndpointConfigs={
-            selection &&
-            applications.find(({ id }) => id === selection.application.id)
-              .metricEndpointConfigs
-          }
+          metricEndpointConfigs={metricEndpointConfigs}
           close={hideSettings}
         />
       </Popup>

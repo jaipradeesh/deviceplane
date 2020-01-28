@@ -8,6 +8,7 @@ import theme from '../../theme';
 import { renderLabels } from '../../helpers/labels';
 import { DevicesFilterButtons } from '../../components/devices-filter-buttons';
 import {
+  OperatorIsOptions,
   OperatorIs,
   OperatorIsNot,
   DevicesFilter,
@@ -33,23 +34,6 @@ import {
   Form,
 } from '../../components/core';
 
-const initialReleaseSelectors = [
-  {
-    releaseQuery: [
-      [
-        {
-          params: {
-            key: '',
-            value: '',
-            operator: { label: OperatorIs, value: OperatorIs },
-          },
-        },
-      ],
-    ],
-    releaseId: '',
-  },
-];
-
 const ReleasePinning = ({
   route: {
     data: { params, application, releases, devices },
@@ -58,7 +42,7 @@ const ReleasePinning = ({
   const [releaseSelectors, setReleaseSelectors] = useState(
     application.schedulingRule.releaseSelectors.length > 0
       ? application.schedulingRule.releaseSelectors
-      : initialReleaseSelectors
+      : []
   );
   const {
     register,
@@ -120,7 +104,7 @@ const ReleasePinning = ({
         },
         cellStyle: {
           marginBottom: '-8px',
-      },
+        },
       },
     ],
     []
@@ -234,7 +218,7 @@ const ReleasePinning = ({
       <Card
         size="xlarge"
         title="Release Pinning"
-        subtitle="Schedule releases to run on devices based on conditions"
+        subtitle="Schedule releases based on certain conditions"
         actions={[
           {
             title: 'Preview',
@@ -257,12 +241,12 @@ const ReleasePinning = ({
             <Row justifyContent="space-between" alignItems="center">
               <Label>Conditions</Label>
               <Row>
-                {releaseSelectors.length > 1 && (
+                {releaseSelectors.length > 0 && (
                   <Button
                     title="Clear"
                     type="button"
                     variant="text"
-                    onClick={() => setReleaseSelectors(initialReleaseSelectors)}
+                    onClick={() => setReleaseSelectors([])}
                     marginRight={4}
                   />
                 )}
@@ -280,6 +264,18 @@ const ReleasePinning = ({
               </Row>
             </Row>
           </Group>
+          {releaseSelectors.length === 0 && (
+            <Row
+              marginBottom={6}
+              flex={1}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text>
+                Add <strong>Conditions</strong>.
+              </Text>
+            </Row>
+          )}
           {releaseSelectors.map((_, index) => (
             <Column
               marginBottom={6}
@@ -292,8 +288,9 @@ const ReleasePinning = ({
                 <Row marginLeft={4} alignItems="center" flex={1}>
                   <Row flex={1}>
                     <Field
+                      required
                       inline
-                      name={`releaseSelectors[${index}].releaseQuery[0].params.key`}
+                      name={`releaseSelectors[${index}].releaseQuery[0][0].params.key`}
                       placeholder="Label Key"
                       ref={register}
                     />
@@ -301,26 +298,20 @@ const ReleasePinning = ({
 
                   <Row width="125px" marginX={4}>
                     <Field
+                      required
                       inline
-                      name={`releaseSelectors[${index}].releaseQuery[0].params.operator`}
-                      as={
-                        <Select
-                          placeholder="Operator"
-                          options={[
-                            { label: OperatorIs, value: OperatorIs },
-                            { label: OperatorIsNot, value: OperatorIsNot },
-                          ]}
-                        />
-                      }
-                      setValue={setValue}
-                      register={register}
+                      type="select"
+                      name={`releaseSelectors[${index}].releaseQuery[0][0].params.operator`}
+                      placeholder="Operator"
+                      options={OperatorIsOptions}
+                      ref={register}
                     />
                   </Row>
 
                   <Row flex={1}>
                     <Field
                       inline
-                      name={`releaseSelectors[${index}].releaseQuery[0].params.value`}
+                      name={`releaseSelectors[${index}].releaseQuery[0][0].params.value`}
                       placeholder="Label Value"
                       ref={register}
                     />
@@ -333,31 +324,35 @@ const ReleasePinning = ({
                 <Row width="120px">
                   <Field
                     inline
+                    required
+                    type="select"
                     name={`releaseSelectors[${index}].releaseId`}
-                    as={
-                      <Select options={releaseOptions} placeholder="Release" />
-                    }
-                    setValue={setValue}
-                    register={register}
+                    options={releaseOptions}
+                    placeholder="Release"
+                    none="There are no releases"
+                    ref={register}
                   />
                 </Row>
               </Row>
             </Column>
           ))}
-          {releaseSelectors.length > 0 && (
-            <Row alignItems="center" alignSelf="flex-start">
-              <Text marginRight={4}>Pin remaining devices to</Text>
-              <Row width="125px">
-                <Field
-                  inline
-                  name="defaultReleaseId"
-                  as={<Select options={releaseOptions} placeholder="Release" />}
-                  setValue={setValue}
-                  register={register}
-                />
-              </Row>
+          <Row alignItems="center" alignSelf="flex-start">
+            <Text marginRight={4}>
+              Pin {releaseSelectors.length > 0 ? 'remaining' : 'all'} devices to
+            </Text>
+            <Row width="125px">
+              <Field
+                required
+                inline
+                type="select"
+                name="defaultReleaseId"
+                options={releaseOptions}
+                placeholder="Release"
+                none="There are no releases"
+                ref={register}
+              />
             </Row>
-          )}
+          </Row>
           <Button
             type="submit"
             marginTop={6}

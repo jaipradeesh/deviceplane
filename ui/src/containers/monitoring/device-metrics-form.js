@@ -124,11 +124,7 @@ const DeviceMetricsForm = ({ params, devices, metrics, close }) => {
               options={labelsOptions}
               multiComponent={DeviceLabelMulti}
               placeholder="Select labels"
-              noOptionsMessage={() => (
-                <Text>
-                  There are no <strong>Labels</strong>.
-                </Text>
-              )}
+              none="There are no Labels"
             />
           }
           errors={errors.description}

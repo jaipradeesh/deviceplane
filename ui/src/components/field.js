@@ -6,7 +6,16 @@ import { Icon } from 'evergreen-ui';
 
 import theme from '../theme';
 import utils from '../utils';
-import { Group, Row, Column, Input, Textarea, Label, Text } from './core';
+import {
+  Group,
+  Row,
+  Column,
+  Input,
+  Textarea,
+  Select,
+  Label,
+  Text,
+} from './core';
 
 const PasswordButton = styled(Row)`
   user-select: none;
@@ -76,6 +85,8 @@ const Field = forwardRef(
       switch (type) {
         case 'textarea':
           return <Textarea name={name} id={name} ref={ref} {...props} />;
+        case 'select':
+          return <Select name={name} id={name} ref={ref} {...props} />;
         default:
           return (
             <Input
